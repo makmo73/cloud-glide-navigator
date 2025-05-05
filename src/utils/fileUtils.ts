@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for file operations
  */
@@ -6,22 +5,36 @@
 /**
  * Determines the type of file based on the file extension
  */
-export const getFileType = (fileName: string): 'image' | 'pdf' | 'text' | 'code' | 'unknown' => {
-  const extension = fileName.split('.').pop()?.toLowerCase() || '';
+export const getFileType = (filePath: string): 'image' | 'pdf' | 'text' | 'code' | 'video' | 'unknown' => {
+  const extension = filePath.split('.').pop()?.toLowerCase() || '';
   
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(extension)) {
+  // Image files
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'bmp', 'ico'].includes(extension)) {
     return 'image';
   }
   
+  // PDF files
   if (extension === 'pdf') {
     return 'pdf';
   }
   
-  if (['txt', 'md', 'json', 'xml', 'csv', 'html'].includes(extension)) {
+  // Video files
+  if (['mp4', 'webm', 'ogg', 'mov', 'avi', 'flv', 'wmv', 'mkv'].includes(extension)) {
+    return 'video';
+  }
+  
+  // Text files
+  if (['txt', 'csv', 'log', 'md', 'markdown'].includes(extension)) {
     return 'text';
   }
-
-  if (['js', 'jsx', 'ts', 'tsx', 'css', 'scss', 'less', 'py', 'java', 'c', 'cpp', 'cs', 'go', 'php', 'rb', 'rs', 'swift'].includes(extension)) {
+  
+  // Code files
+  if ([
+    'js', 'jsx', 'ts', 'tsx', 'html', 'css', 'scss', 'less',
+    'json', 'xml', 'yaml', 'yml', 'py', 'rb', 'java', 'c', 'cpp',
+    'cs', 'go', 'rs', 'php', 'sh', 'bash', 'zsh', 'swift', 'kt',
+    'sql', 'graphql', 'dockerfile', 'md'
+  ].includes(extension)) {
     return 'code';
   }
   

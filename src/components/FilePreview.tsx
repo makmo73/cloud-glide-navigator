@@ -1,11 +1,13 @@
+
 import { useState, useEffect } from 'react';
-import { X, FileText, File, FileImage, FileCode } from 'lucide-react';
+import { X, FileText, File, FileImage, FileCode, Video } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { S3Object } from '@/types/s3';
 import { getFileType, getCodeLanguage } from '@/utils/fileUtils';
+import { getEnhancedFileType } from '@/utils/fileTypeUtils';
 import Prism from 'prismjs';
 // Import Prism CSS theme
 import 'prismjs/themes/prism-tomorrow.css';
@@ -47,7 +49,7 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
     if (!file || !url || file.isFolder) return;
     
     // For text or code files, load the content
-    const fileType = getFileType(file.key);
+    const fileType = getEnhancedFileType(file.key);
     if (fileType === 'text' || fileType === 'code') {
       setIsLoading(true);
       setError(null);
@@ -74,7 +76,7 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
   
   useEffect(() => {
     // Highlight code when content changes
-    if (file && content && getFileType(file.key) === 'code') {
+    if (file && content && getEnhancedFileType(file.key) === 'code') {
       Prism.highlightAll();
     }
   }, [content, file]);
@@ -82,7 +84,7 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
   if (!file || !isOpen) return null;
   
   const fileName = file.key.split('/').pop() || file.key;
-  const fileType = getFileType(file.key);
+  const fileType = getEnhancedFileType(file.key);
   
   const renderPreview = () => {
     if (!url) return <div className="text-center p-4 text-muted-foreground">Preview not available</div>;
@@ -93,6 +95,19 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
           <div className="flex items-center justify-center">
             <img src={url} alt={fileName} className="max-w-full max-h-[calc(100vh-200px)] object-contain" />
           </div>
+        );
+        
+      case 'video':
+        return (
+          <AspectRatio ratio={16/9} className="bg-black">
+            <video 
+              src={url} 
+              className="w-full h-full" 
+              controls
+              controlsList="nodownload"
+              autoPlay={false}
+            />
+          </AspectRatio>
         );
         
       case 'pdf':
@@ -157,6 +172,8 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
     switch (fileType) {
       case 'image':
         return <FileImage className="mr-2 h-5 w-5" />;
+      case 'video':
+        return <Video className="mr-2 h-5 w-5" />;
       case 'pdf':
         return <File className="mr-2 h-5 w-5" />;
       case 'code':
