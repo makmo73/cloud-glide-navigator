@@ -41,6 +41,15 @@ npm run dev
 
 You can run CloudGlide S3 Manager as a desktop application using Electron:
 
+### Prerequisites
+
+Before packaging the application, make sure you have the following installed:
+- Node.js (v16 or newer)
+- npm (included with Node.js)
+- For macOS builds: macOS operating system
+- For Windows builds: Windows operating system or Wine on macOS/Linux
+- For Linux builds: Linux operating system
+
 ### Development Mode
 
 ```sh
@@ -59,6 +68,12 @@ npm run electron:build
 
 # Build specifically for macOS
 npm run electron:build:mac
+
+# Build specifically for Windows
+npm run electron:build:win
+
+# Build specifically for Linux
+npm run electron:build:linux
 ```
 
 The packaged application will be available in the `release` directory.
