@@ -1,12 +1,35 @@
 
 import { useState, useEffect } from 'react';
-import { X, FileText, File, FileImage } from 'lucide-react';
+import { X, FileText, File, FileImage, FileCode } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { S3Object } from '@/types/s3';
-import { getFileType } from '@/utils/fileUtils';
+import { getFileType, getCodeLanguage } from '@/utils/fileUtils';
+import Prism from 'prismjs';
+// Import Prism CSS theme
+import 'prismjs/themes/prism-tomorrow.css';
+// Import languages
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-tsx';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-c';
+import 'prismjs/components/prism-cpp';
+import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-go';
+import 'prismjs/components/prism-ruby';
+import 'prismjs/components/prism-rust';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-markup'; // for HTML and XML
+import 'prismjs/components/prism-markdown';
+import 'prismjs/components/prism-yaml';
+import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-scss';
 
 interface FilePreviewProps {
   file: S3Object | null;
@@ -24,9 +47,9 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
   useEffect(() => {
     if (!file || !url || file.isFolder) return;
     
-    // For text files, load the content
+    // For text or code files, load the content
     const fileType = getFileType(file.key);
-    if (fileType === 'text') {
+    if (fileType === 'text' || fileType === 'code') {
       setIsLoading(true);
       setError(null);
       
@@ -49,6 +72,13 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
         });
     }
   }, [file, url]);
+  
+  useEffect(() => {
+    // Highlight code when content changes
+    if (file && content && getFileType(file.key) === 'code') {
+      Prism.highlightAll();
+    }
+  }, [content, file]);
   
   if (!file || !isOpen) return null;
   
@@ -91,6 +121,27 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
             <pre className="text-sm whitespace-pre-wrap font-mono">{content}</pre>
           </ScrollArea>
         );
+      
+      case 'code':
+        if (isLoading) {
+          return <div className="text-center p-4">Loading content...</div>;
+        }
+        
+        if (error) {
+          return <div className="text-center p-4 text-destructive">{error}</div>;
+        }
+
+        const language = getCodeLanguage(fileName);
+        
+        return (
+          <ScrollArea className="h-[70vh] w-full border rounded-md bg-muted">
+            <pre className="p-4 text-sm">
+              <code className={`language-${language}`}>
+                {content}
+              </code>
+            </pre>
+          </ScrollArea>
+        );
         
       default:
         return (
@@ -109,6 +160,8 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
         return <FileImage className="mr-2 h-5 w-5" />;
       case 'pdf':
         return <File className="mr-2 h-5 w-5" />;
+      case 'code':
+        return <FileCode className="mr-2 h-5 w-5" />;
       default:
         return <FileText className="mr-2 h-5 w-5" />;
     }
