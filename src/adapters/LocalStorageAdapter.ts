@@ -100,4 +100,32 @@ export class LocalStorageAdapter implements StorageAdapter {
     const mockBlob = new Blob(["This is a mock file content"], { type: "text/plain" });
     return this.simulateDelay(mockBlob);
   }
+
+  async getObjectUrl(bucketName: string, key: string): Promise<string> {
+    console.log(`Generating URL for object in local bucket ${bucketName}:`, key);
+    
+    // For local files, we would typically use a file:// URL or a local server URL
+    // For the mock implementation, we'll generate mock URLs based on file type
+    const fileName = key.split('/').pop() || '';
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    
+    let mockUrl = '';
+    
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+      // Provide a sample image for preview
+      mockUrl = `https://placehold.co/800x600?text=${encodeURIComponent(fileName)}`;
+    } else if (extension === 'pdf') {
+      // For PDFs, use a sample PDF URL
+      mockUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    } else if (['txt', 'md', 'json', 'xml', 'csv'].includes(extension)) {
+      // For text files, create a data URL with mock content
+      const content = `This is a mock content for the local file: ${fileName}\n\nLocal path: ${this.localPath}/${bucketName}/${key}\n\nGenerated at ${new Date().toLocaleString()}`;
+      mockUrl = `data:text/plain;base64,${btoa(content)}`;
+    } else {
+      // For other files, create a generic data URL
+      mockUrl = `data:application/octet-stream;base64,${btoa(`Binary content for ${fileName}`)}`;
+    }
+    
+    return this.simulateDelay(mockUrl);
+  }
 }

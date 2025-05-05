@@ -4,11 +4,13 @@ import { File, Folder, FolderOpen, FileX, ArrowUpDown, Grid3X3, List } from "luc
 import { S3Object } from "@/types/s3";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { formatFileSize, formatDate } from "@/utils/fileUtils";
 
 interface FileExplorerProps {
   files: S3Object[];
   isLoading: boolean;
   onFileClick: (file: S3Object) => void;
+  onPreviewFile?: (file: S3Object) => void;
   onSelectionChange: (selectedKeys: string[]) => void;
   viewType: "grid" | "list";
   onViewChange: (view: "grid" | "list") => void;
@@ -18,6 +20,7 @@ const FileExplorer = ({
   files,
   isLoading,
   onFileClick,
+  onPreviewFile,
   onSelectionChange,
   viewType,
   onViewChange
@@ -70,16 +73,14 @@ const FileExplorer = ({
     }));
   };
 
-  const formatSize = (bytes: number) => {
-    if (bytes === 0) return "—";
-    const sizes = ["B", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  const handleFileAction = (file: S3Object) => {
+    if (file.isFolder) {
+      onFileClick(file);
+    } else if (onPreviewFile) {
+      onPreviewFile(file);
+    } else {
+      onFileClick(file);
+    }
   };
 
   useEffect(() => {
@@ -137,7 +138,7 @@ const FileExplorer = ({
               className={`p-4 rounded-md border cursor-pointer transition-colors ${
                 selectedItems.has(file.key) ? "bg-secondary border-primary" : "hover:bg-secondary/50"
               }`}
-              onClick={() => onFileClick(file)}
+              onClick={() => handleFileAction(file)}
             >
               <div className="flex items-start mb-2">
                 <div className="flex-1 flex items-center gap-2">
@@ -163,7 +164,7 @@ const FileExplorer = ({
               </div>
               <div className="text-sm truncate font-medium">{file.key.split("/").pop()}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {file.isFolder ? "Folder" : formatSize(file.size)}
+                {file.isFolder ? "Folder" : formatFileSize(file.size)}
               </div>
             </div>
           ))}
@@ -218,7 +219,7 @@ const FileExplorer = ({
             {sortedFiles.map((file) => (
               <div
                 key={file.key}
-                onClick={() => onFileClick(file)}
+                onClick={() => handleFileAction(file)}
                 className={`file-list px-4 py-2 border-t first:border-t-0 cursor-pointer ${
                   selectedItems.has(file.key) ? "bg-secondary" : "hover:bg-muted/50"
                 }`}
@@ -247,7 +248,7 @@ const FileExplorer = ({
                   </div>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {file.isFolder ? "—" : formatSize(file.size)}
+                  {file.isFolder ? "—" : formatFileSize(file.size)}
                 </span>
                 <span className="text-sm text-right text-muted-foreground ml-auto">
                   {formatDate(file.lastModified)}

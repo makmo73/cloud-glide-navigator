@@ -101,4 +101,30 @@ export class S3Adapter implements StorageAdapter {
     const mockBlob = new Blob(["This is a mock file content for S3"], { type: "text/plain" });
     return this.simulateDelay(mockBlob);
   }
+
+  async getObjectUrl(bucketName: string, key: string): Promise<string> {
+    console.log(`Generating URL for object in bucket ${bucketName}:`, key);
+    
+    // In a real implementation, this would generate a signed URL
+    // For the mock implementation, we'll generate a fake URL based on the file type
+    const fileName = key.split('/').pop() || '';
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    
+    // Generate mock URLs for different file types
+    let mockUrl = '';
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+      // For images, use placeholder images
+      mockUrl = `https://placehold.co/600x400?text=${encodeURIComponent(fileName)}`;
+    } else if (extension === 'pdf') {
+      // For PDFs, we'll use a sample PDF URL
+      mockUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    } else {
+      // For text files, we'll create a data URL with some sample content
+      const content = `This is a mock content for the file: ${fileName}`;
+      mockUrl = `data:text/plain;base64,${btoa(content)}`;
+    }
+    
+    return this.simulateDelay(mockUrl);
+  }
 }

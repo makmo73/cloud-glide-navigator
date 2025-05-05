@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import FileExplorer from "@/components/FileExplorer";
+import FilePreview from "@/components/FilePreview";
 import BreadcrumbNav from "@/components/BreadcrumbNav";
 import CreateBucketDialog from "@/components/CreateBucketDialog";
 import { S3Account, S3Bucket, S3Object, BreadcrumbItem } from "@/types/s3";
@@ -55,6 +56,9 @@ const Index = () => {
   const [showCreateBucket, setShowCreateBucket] = useState<boolean>(false);
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+  const [previewFile, setPreviewFile] = useState<S3Object | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -192,8 +196,49 @@ const Index = () => {
       }
     } else {
       // Handle file selection/preview
-      toast.info(`Selected file: ${file.key}`);
+      handlePreviewFile(file);
     }
+  };
+
+  const handlePreviewFile = async (file: S3Object) => {
+    if (file.isFolder || !activeAccountId || !activeBucket) return;
+    
+    setIsLoading(true);
+    setPreviewFile(file);
+    
+    try {
+      const account = accounts.find(acc => acc.id === activeAccountId);
+      if (!account) {
+        toast.error("Account not found");
+        return;
+      }
+      
+      const adapter = createStorageAdapter({
+        accessKey: account.accessKey,
+        secretKey: account.secretKey,
+        region: account.region,
+        endpoint: account.endpoint,
+        isLocalStorage: account.isLocalStorage,
+        localPath: account.localPath
+      });
+      
+      const url = await adapter.getObjectUrl(activeBucket, file.key);
+      setPreviewUrl(url);
+      setShowPreview(true);
+      
+    } catch (error) {
+      console.error("Failed to generate preview URL:", error);
+      toast.error("Failed to generate preview");
+      setPreviewFile(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    setPreviewFile(null);
+    setPreviewUrl(null);
   };
 
   const handleNavigate = (path: string) => {
@@ -336,7 +381,13 @@ const Index = () => {
   const handleDownload = async () => {
     if (selectedItems.length === 0 || !activeAccountId || !activeBucket) return;
     
-    toast.info(`Downloading ${selectedItems.length} item(s)...`);
+    const fileToDownload = previewFile || files.find(file => file.key === selectedItems[0]);
+    if (!fileToDownload) {
+      toast.error("No file selected for download");
+      return;
+    }
+    
+    toast.info(`Downloading ${fileToDownload.key.split('/').pop()}...`);
     setIsLoading(true);
     
     try {
@@ -355,24 +406,22 @@ const Index = () => {
         localPath: account.localPath
       });
       
-      // Download first item for demo
-      const key = selectedItems[0];
-      const blob = await adapter.downloadObject(activeBucket, key);
+      const blob = await adapter.downloadObject(activeBucket, fileToDownload.key);
       
       // Create download link
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = key.split("/").pop() || "download";
+      a.download = fileToDownload.key.split("/").pop() || "download";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success(`${selectedItems.length} item(s) downloaded successfully`);
+      toast.success(`Downloaded ${fileToDownload.key.split('/').pop()} successfully`);
     } catch (error) {
-      console.error("Failed to download items:", error);
-      toast.error("Failed to download items");
+      console.error("Failed to download file:", error);
+      toast.error("Failed to download file");
     } finally {
       setIsLoading(false);
     }
@@ -459,6 +508,7 @@ const Index = () => {
                 files={files}
                 isLoading={isLoading}
                 onFileClick={handleFileClick}
+                onPreviewFile={handlePreviewFile}
                 onSelectionChange={setSelectedItems}
                 viewType={viewType}
                 onViewChange={setViewType}
@@ -502,6 +552,16 @@ const Index = () => {
           onClose={() => setShowCreateBucket(false)}
           onCreateBucket={handleCreateBucket}
           accountId={activeAccountId}
+        />
+      )}
+
+      {previewFile && (
+        <FilePreview
+          file={previewFile}
+          url={previewUrl}
+          isOpen={showPreview}
+          onClose={handleClosePreview}
+          onDownload={handleDownload}
         />
       )}
     </div>

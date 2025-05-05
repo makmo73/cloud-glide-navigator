@@ -41,4 +41,5 @@ export interface StorageAdapter {
   deleteObjects: (bucketName: string, keys: string[]) => Promise<void>;
   uploadFile: (bucketName: string, key: string, file: File) => Promise<void>;
   downloadObject: (bucketName: string, key: string) => Promise<Blob>;
+  getObjectUrl: (bucketName: string, key: string) => Promise<string>;
 }
