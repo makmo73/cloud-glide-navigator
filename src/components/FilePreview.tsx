@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { X, FileText, FilePdf, FileImage } from 'lucide-react';
+import { X, FileText, File, FileImage } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -108,7 +108,7 @@ const FilePreview = ({ file, url, isOpen, onClose, onDownload }: FilePreviewProp
       case 'image':
         return <FileImage className="mr-2 h-5 w-5" />;
       case 'pdf':
-        return <FilePdf className="mr-2 h-5 w-5" />;
+        return <File className="mr-2 h-5 w-5" />;
       default:
         return <FileText className="mr-2 h-5 w-5" />;
     }
