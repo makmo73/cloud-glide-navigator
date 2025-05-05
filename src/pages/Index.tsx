@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
@@ -9,6 +8,7 @@ import CreateFolderDialog from "@/components/CreateFolderDialog";
 import RenameFileDialog from "@/components/RenameFileDialog";
 import { useS3Storage } from "@/hooks/useS3Storage";
 import { useFileOperations } from "@/hooks/useFileOperations";
+import { S3Object } from "@/types/s3";
 
 const Index = () => {
   const [showCreateBucket, setShowCreateBucket] = useState<boolean>(false);
