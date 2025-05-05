@@ -128,4 +128,30 @@ export class LocalStorageAdapter implements StorageAdapter {
     
     return this.simulateDelay(mockUrl);
   }
+
+  // Implement the new methods required by the StorageAdapter interface
+  async createFolder(bucketName: string, folderPath: string): Promise<void> {
+    console.log(`Creating folder in local bucket ${bucketName}:`, folderPath);
+    
+    // In a real implementation, we would create a directory on the filesystem
+    // For the mock implementation, we'll just simulate the delay
+    return this.simulateDelay(undefined);
+  }
+
+  async renameObject(bucketName: string, oldKey: string, newKey: string): Promise<void> {
+    console.log(`Renaming object in local bucket ${bucketName} from ${oldKey} to ${newKey}`);
+    
+    // In a real implementation, we would rename the file or directory on the filesystem
+    // For the mock implementation, we'll just simulate the delay
+    return this.simulateDelay(undefined);
+  }
+
+  // Optional method for generating shareable links
+  async generateShareableLink(bucketName: string, key: string, expiresIn: number = 3600): Promise<string> {
+    console.log(`Generating shareable link for object ${key} in local bucket ${bucketName}`);
+    
+    // For local storage, this could be implemented as a temporary web share or localhost URL
+    const mockUrl = `http://localhost:3000/share/${bucketName}/${key}?expires=${Date.now() + expiresIn * 1000}`;
+    return this.simulateDelay(mockUrl);
+  }
 }

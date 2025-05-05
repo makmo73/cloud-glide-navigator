@@ -607,6 +607,10 @@ const Index = () => {
     }
   };
 
+  const onDeleteFile = (file: S3Object) => {
+    handleDelete([file.key]);
+  };
+
   useEffect(() => {
     // If we have accounts but no active account, select the first one
     if (accounts.length > 0 && !activeAccountId) {
@@ -655,7 +659,7 @@ const Index = () => {
                 viewType={viewType}
                 onViewChange={setViewType}
                 onRenameFile={handleRenameFile}
-                onDeleteFile={(file) => handleDelete([file.key])}
+                onDeleteFile={onDeleteFile}
                 onDownloadFile={(file) => handleDownloadFile(file)}
                 onCreateFolder={() => setShowCreateFolder(true)}
               />

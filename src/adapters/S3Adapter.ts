@@ -127,4 +127,33 @@ export class S3Adapter implements StorageAdapter {
     
     return this.simulateDelay(mockUrl);
   }
+
+  // Implement the new methods required by the StorageAdapter interface
+  async createFolder(bucketName: string, folderPath: string): Promise<void> {
+    console.log(`Creating folder in bucket ${bucketName}:`, folderPath);
+    
+    // In S3, folders are just objects with a trailing slash and zero content
+    // So we'd create an empty object with the key being the folder path
+    const key = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
+    
+    // Just simulate the delay for now, no actual implementation needed for mock
+    return this.simulateDelay(undefined);
+  }
+
+  async renameObject(bucketName: string, oldKey: string, newKey: string): Promise<void> {
+    console.log(`Renaming object in bucket ${bucketName} from ${oldKey} to ${newKey}`);
+    
+    // In S3, renaming is actually copying to a new key and then deleting the old object
+    // For the mock implementation, we'll just simulate the delay
+    return this.simulateDelay(undefined);
+  }
+
+  // Optional method for generating shareable links
+  async generateShareableLink(bucketName: string, key: string, expiresIn: number = 3600): Promise<string> {
+    console.log(`Generating shareable link for object ${key} in bucket ${bucketName} with expiration ${expiresIn} seconds`);
+    
+    // In a real implementation, this would generate a pre-signed URL with expiration
+    const mockUrl = `https://example-share.com/${bucketName}/${key}?expires=${Date.now() + expiresIn * 1000}`;
+    return this.simulateDelay(mockUrl);
+  }
 }
