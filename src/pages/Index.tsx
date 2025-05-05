@@ -525,11 +525,11 @@ const Index = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (selectedItems.length === 0 || !activeAccountId || !activeBucket) return;
+  const handleDelete = async (keysToDelete: string[]) => {
+    if (keysToDelete.length === 0 || !activeAccountId || !activeBucket) return;
     
-    if (confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?`)) {
-      toast.info(`Deleting ${selectedItems.length} item(s)...`);
+    if (confirm(`Are you sure you want to delete ${keysToDelete.length} item(s)?`)) {
+      toast.info(`Deleting ${keysToDelete.length} item(s)...`);
       setIsLoading(true);
       
       try {
@@ -548,13 +548,13 @@ const Index = () => {
           localPath: account.localPath
         });
         
-        await adapter.deleteObjects(activeBucket, selectedItems);
+        await adapter.deleteObjects(activeBucket, keysToDelete);
         
         // Remove selected items from files
-        const newFiles = files.filter((file) => !selectedItems.includes(file.key));
+        const newFiles = files.filter((file) => !keysToDelete.includes(file.key));
         setFiles(newFiles);
         setSelectedItems([]);
-        toast.success(`${selectedItems.length} item(s) deleted successfully`);
+        toast.success(`${keysToDelete.length} item(s) deleted successfully`);
       } catch (error) {
         console.error("Failed to delete items:", error);
         toast.error("Failed to delete items");

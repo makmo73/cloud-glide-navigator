@@ -1,0 +1,26 @@
+
+{
+  "appId": "com.cloudglide.s3manager",
+  "productName": "CloudGlide S3 Manager",
+  "directories": {
+    "output": "release/"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*"
+  ],
+  "mac": {
+    "category": "public.app-category.productivity",
+    "icon": "public/icon.icns"
+  },
+  "win": {
+    "icon": "public/icon.ico"
+  },
+  "linux": {
+    "icon": "public/icon.png",
+    "target": [
+      "AppImage",
+      "deb"
+    ]
+  }
+}
