@@ -42,4 +42,11 @@ export interface StorageAdapter {
   uploadFile: (bucketName: string, key: string, file: File) => Promise<void>;
   downloadObject: (bucketName: string, key: string) => Promise<Blob>;
   getObjectUrl: (bucketName: string, key: string) => Promise<string>;
+  
+  // New methods for file organization
+  createFolder: (bucketName: string, folderPath: string) => Promise<void>;
+  renameObject: (bucketName: string, oldKey: string, newKey: string) => Promise<void>;
+  
+  // Optional method for sharing
+  generateShareableLink?: (bucketName: string, key: string, expiresIn?: number) => Promise<string>;
 }

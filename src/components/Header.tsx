@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Upload, Download, Trash2 } from "lucide-react";
+import { Search, Plus, Upload, Download, Trash2, FolderPlus } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {
@@ -12,6 +12,7 @@ interface HeaderProps {
   onUpload: () => void;
   onDownload: () => void;
   onDelete: () => void;
+  onCreateFolder?: () => void;
   selectedItems: string[];
 }
 
@@ -22,6 +23,7 @@ const Header = ({
   onUpload,
   onDownload,
   onDelete,
+  onCreateFolder,
   selectedItems
 }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,6 +63,17 @@ const Header = ({
             >
               <Plus size={16} />
               <span>Bucket</span>
+            </Button>
+          )}
+          {currentPath && onCreateFolder && (
+            <Button
+              onClick={onCreateFolder}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <FolderPlus size={16} />
+              <span>New Folder</span>
             </Button>
           )}
           <Button

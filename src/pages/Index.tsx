@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -8,6 +7,8 @@ import FileExplorer from "@/components/FileExplorer";
 import FilePreview from "@/components/FilePreview";
 import BreadcrumbNav from "@/components/BreadcrumbNav";
 import CreateBucketDialog from "@/components/CreateBucketDialog";
+import CreateFolderDialog from "@/components/CreateFolderDialog";
+import RenameFileDialog from "@/components/RenameFileDialog";
 import { S3Account, S3Bucket, S3Object, BreadcrumbItem } from "@/types/s3";
 import { createStorageAdapter } from "@/adapters";
 
@@ -54,6 +55,9 @@ const Index = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showCreateBucket, setShowCreateBucket] = useState<boolean>(false);
+  const [showCreateFolder, setShowCreateFolder] = useState<boolean>(false);
+  const [showRenameDialog, setShowRenameDialog] = useState<boolean>(false);
+  const [fileToRename, setFileToRename] = useState<S3Object | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
   const [previewFile, setPreviewFile] = useState<S3Object | null>(null);
@@ -318,6 +322,100 @@ const Index = () => {
     }
   };
 
+  const handleCreateFolder = async (folderName: string) => {
+    if (!activeAccountId || !activeBucket) return;
+
+    const newFolderPath = currentPath ? `${currentPath}${folderName}/` : `${folderName}/`;
+    
+    setIsLoading(true);
+    try {
+      const account = accounts.find(acc => acc.id === activeAccountId);
+      if (!account) {
+        toast.error("Account not found");
+        return;
+      }
+      
+      const adapter = createStorageAdapter({
+        accessKey: account.accessKey,
+        secretKey: account.secretKey,
+        region: account.region,
+        endpoint: account.endpoint,
+        isLocalStorage: account.isLocalStorage,
+        localPath: account.localPath
+      });
+      
+      await adapter.createFolder(activeBucket, newFolderPath);
+      
+      toast.success(`Folder "${folderName}" created successfully`);
+      
+      // Refresh file list
+      await loadFiles(activeAccountId, activeBucket, currentPath);
+      
+    } catch (error) {
+      console.error("Failed to create folder:", error);
+      toast.error("Failed to create folder");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRenameFile = async (file: S3Object, newName: string) => {
+    setFileToRename(file);
+    setShowRenameDialog(true);
+  };
+
+  const handleRenameSubmit = async (newName: string) => {
+    if (!activeAccountId || !activeBucket || !fileToRename) return;
+
+    setIsLoading(true);
+    try {
+      const account = accounts.find(acc => acc.id === activeAccountId);
+      if (!account) {
+        toast.error("Account not found");
+        return;
+      }
+
+      const adapter = createStorageAdapter({
+        accessKey: account.accessKey,
+        secretKey: account.secretKey,
+        region: account.region,
+        endpoint: account.endpoint,
+        isLocalStorage: account.isLocalStorage,
+        localPath: account.localPath
+      });
+
+      const oldKey = fileToRename.key;
+      const oldKeyParts = oldKey.split("/");
+      oldKeyParts.pop(); // Remove the old name
+      
+      let newKey: string;
+      if (fileToRename.isFolder) {
+        // For folders, ensure the key ends with a slash
+        newKey = oldKeyParts.length > 0 
+          ? `${oldKeyParts.join("/")}/${newName}/`
+          : `${newName}/`;
+      } else {
+        newKey = oldKeyParts.length > 0
+          ? `${oldKeyParts.join("/")}/${newName}`
+          : newName;
+      }
+
+      await adapter.renameObject(activeBucket, oldKey, newKey);
+
+      toast.success(`Renamed successfully`);
+
+      // Refresh file list
+      await loadFiles(activeAccountId, activeBucket, currentPath);
+
+    } catch (error) {
+      console.error("Failed to rename:", error);
+      toast.error("Failed to rename");
+    } finally {
+      setIsLoading(false);
+      setFileToRename(null);
+    }
+  };
+
   const handleUpload = () => {
     if (!activeBucket) {
       toast.error("Please select a bucket first");
@@ -466,6 +564,49 @@ const Index = () => {
     }
   };
 
+  const handleDownloadFile = async (file: S3Object) => {
+    if (!file) return;
+    
+    toast.info(`Downloading ${file.key.split('/').pop()}...`);
+    setIsLoading(true);
+    
+    try {
+      const account = accounts.find(acc => acc.id === activeAccountId);
+      if (!account) {
+        toast.error("Account not found");
+        return;
+      }
+      
+      const adapter = createStorageAdapter({
+        accessKey: account.accessKey,
+        secretKey: account.secretKey,
+        region: account.region,
+        endpoint: account.endpoint,
+        isLocalStorage: account.isLocalStorage,
+        localPath: account.localPath
+      });
+      
+      const blob = await adapter.downloadObject(activeBucket, file.key);
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.key.split("/").pop() || "download";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Downloaded ${file.key.split('/').pop()} successfully`);
+    } catch (error) {
+      console.error("Failed to download file:", error);
+      toast.error("Failed to download file");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     // If we have accounts but no active account, select the first one
     if (accounts.length > 0 && !activeAccountId) {
@@ -493,6 +634,7 @@ const Index = () => {
           onUpload={handleUpload}
           onDownload={handleDownload}
           onDelete={handleDelete}
+          onCreateFolder={() => setShowCreateFolder(true)}
           selectedItems={selectedItems}
         />
         
@@ -512,6 +654,10 @@ const Index = () => {
                 onSelectionChange={setSelectedItems}
                 viewType={viewType}
                 onViewChange={setViewType}
+                onRenameFile={handleRenameFile}
+                onDeleteFile={(file) => handleDelete([file.key])}
+                onDownloadFile={(file) => handleDownloadFile(file)}
+                onCreateFolder={() => setShowCreateFolder(true)}
               />
             </div>
           </>
@@ -554,6 +700,20 @@ const Index = () => {
           accountId={activeAccountId}
         />
       )}
+
+      <CreateFolderDialog
+        isOpen={showCreateFolder}
+        onClose={() => setShowCreateFolder(false)}
+        onCreateFolder={handleCreateFolder}
+        currentPath={currentPath}
+      />
+
+      <RenameFileDialog
+        isOpen={showRenameDialog}
+        onClose={() => setShowRenameDialog(false)}
+        onRename={handleRenameSubmit}
+        file={fileToRename}
+      />
 
       {previewFile && (
         <FilePreview
