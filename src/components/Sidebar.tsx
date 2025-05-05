@@ -72,7 +72,7 @@ const Sidebar = ({
   };
 
   return (
-    <div className="w-60 border-r h-full flex flex-col bg-white">
+    <div className="w-60 border-r h-full flex flex-col bg-card">
       <div className="p-4 flex items-center justify-between border-b">
         <div className="flex items-center">
           <Cloud className="h-5 w-5 text-primary mr-2" />

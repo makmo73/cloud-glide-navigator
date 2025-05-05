@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Upload, Download, Trash2 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {
   currentPath: string;
@@ -36,11 +37,11 @@ const Header = ({
   };
 
   return (
-    <div className="border-b bg-white sticky top-0 z-10">
+    <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
       <div className="flex items-center justify-between p-2 px-4">
         <div className="flex items-center gap-2 w-full max-w-md">
           <div className="relative w-full">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search files or folders..."
               className="pl-8 pr-4"
@@ -91,6 +92,7 @@ const Header = ({
             <Trash2 size={16} />
             <span>Delete</span>
           </Button>
+          <ThemeToggle />
         </div>
       </div>
     </div>
