@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { X, FileText, File, FileImage, FileCode } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
